@@ -1,0 +1,268 @@
+/* src/components/AddStudent/AddStudent.css */
+.add-student-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.add-student-container h2 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.student-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.student-form fieldset {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 16px;
+  background: #f8f9fa;
+}
+
+.student-form legend {
+  font-weight: 600;
+  color: #495057;
+  padding: 0 8px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.form-grid label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #555;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.form-grid input, .form-grid select {
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+
+.form-grid input:focus, .form-grid select:focus {
+  outline: none;
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.15);
+}
+
+.checkbox-label {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.btn-submit {
+  padding: 12px 24px;
+  background: #0d6efd;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  align-self: flex-end;
+}
+
+.btn-submit:hover:not(:disabled) { background: #0b5ed7; }
+.btn-submit:disabled { background: #6c757d; cursor: not-allowed; }
+
+.msg-box {
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+}
+.msg-success { background: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
+.msg-error { background: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
+
+@media (max-width: 600px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .btn-submit { align-self: stretch; }
+}
+
+/* src/components/AddStudent/AddStudent.css — добавь в конец */
+
+/* 🔹 Секция импорта */
+.import-section {
+  margin-bottom: 32px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+}
+
+.import-section h3 {
+  margin: 0 0 16px 0;
+  color: #111;
+  font-size: 18px;
+}
+
+.import-box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.file-input {
+  padding: 10px;
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.file-input:hover {
+  border-color: #007bff;
+}
+
+.file-info {
+  margin: 0;
+  font-size: 14px;
+  color: #555;
+}
+
+.import-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-import,
+.btn-template {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.btn-import {
+  background: #28a745;
+  color: white;
+}
+.btn-import:hover:not(:disabled) { background: #218838; }
+.btn-import:disabled { background: #ccc; cursor: not-allowed; }
+.btn-import.loading { 
+  background: #6c757d; 
+  animation: pulse 1.5s infinite;
+}
+
+.btn-template {
+  background: #17a2b8;
+  color: white;
+}
+.btn-template:hover { background: #138496; }
+
+/* 🔹 Результаты импорта */
+.import-result {
+  margin-top: 16px;
+  padding: 16px;
+  background: #fff;
+  border-radius: 8px;
+  border-left: 4px solid #28a745;
+}
+
+.import-result h4 {
+  margin: 0 0 12px 0;
+  color: #333;
+}
+
+.import-result ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #555;
+}
+
+.import-result details {
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.import-result summary {
+  cursor: pointer;
+  color: #007bff;
+  font-weight: 500;
+}
+
+.error-list {
+  margin: 8px 0 0 0;
+  padding-left: 20px;
+  font-size: 13px;
+  color: #721c24;
+  background: #f8d7da;
+  padding: 12px;
+  border-radius: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.error-item {
+  margin: 4px 0;
+}
+
+/* 🔹 Разделитель */
+.divider {
+  border: none;
+  border-top: 1px solid #e9ecef;
+  margin: 32px 0;
+}
+
+/* 🔹 Анимация загрузки */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* 🔹 Адаптив */
+@media (max-width: 768px) {
+  .import-actions {
+    flex-direction: column;
+  }
+  .btn-import, .btn-template {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* 🔹 Выпадающий список гражданства */
+select[name="citizenship_code"] {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.95em;
+  cursor: pointer;
+}
+
+select[name="citizenship_code"]:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* 🔹 Иконки флагов (опционально, если хотите визуал) */
+select[name="citizenship_code"] option::before {
+  content: "🌍 ";
+}
+

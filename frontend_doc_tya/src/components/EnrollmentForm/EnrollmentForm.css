@@ -1,0 +1,131 @@
+/* src/components/EnrollmentForm/EnrollmentForm.css */
+
+/* 🔹 Наследуем стили из AddStudent для единообразия */
+@import '../AddStudent/AddStudent.css';
+
+/* 🔹 Специфичные стили для EnrollmentForm */
+
+/* Поиск слушателей */
+.search-container {
+  position: relative;
+}
+
+.search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  margin-top: 4px;
+  padding: 4px 0;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.search-dropdown-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.search-dropdown-item:hover {
+  background: #f0f0f0;
+}
+
+/* Чипсы выбранных слушателей */
+.selected-students {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  min-height: 32px;
+}
+
+.student-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #e9ecef;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.remove-chip {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.remove-chip:hover {
+  color: #dc3545;
+}
+
+.empty-selection {
+  font-size: 13px;
+  color: #999;
+  font-style: italic;
+}
+
+/* 🔹 Результаты предпросмотра импорта */
+.preview-row {
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 4px;
+  margin: 4px 0;
+}
+.preview-row.success {
+  background: #d4edda;
+  color: #155724;
+}
+.preview-row.error {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+/* 🔹 Кнопка подтверждения импорта */
+.btn-commit {
+  background: #007bff;
+  color: white;
+}
+.btn-commit:hover:not(:disabled) {
+  background: #0056b3;
+}
+.btn-commit:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* 🔹 Футер формы */
+.form-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e9ecef;
+}
+
+.form-footer-info {
+  font-size: 14px;
+  color: #555;
+}
+
+/* 🔹 Адаптив для поиска */
+@media (max-width: 768px) {
+  .search-container {
+    grid-column: 1 / -1 !important;
+  }
+  .form-footer {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+}

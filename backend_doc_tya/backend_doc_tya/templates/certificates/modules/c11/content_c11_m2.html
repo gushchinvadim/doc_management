@@ -1,0 +1,102 @@
+{# templates/certificates/modules/c02/content_c02_m1.html #}
+{% extends "certificates/course_base.html" %}
+{% load static %}
+
+{% block certificate_content %}
+
+
+<div>
+<table border="1">
+    <caption>И показал (а) следующие знания:</caption>
+    <thead >
+        <tr class="training-table">
+            <th colspan="3">Этапы подготовки</th>
+            <th colspan="6">Тематическое содержание этапов подготовки</th>
+            <th colspan="2">Продолжительность подготовки</th>
+            <th colspan="2">Итоговая оценка знаний, навыков (умений)</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="title-item" rowspan="15" colspan="3">Этап 1<br>Теоретическая (наземная) подготовка</td>
+            <td class="title-item" colspan="6">1. Воздушное право</td>
+            <td colspan="2">1 ак. ч.</td>
+            <td colspan="2"> 5 (отлично)</td>
+        </tr>
+        <tr>
+            <td class="title-item" colspan="6">2. Основы полёта</td>
+            <td colspan="2">1 ак. ч.</td>
+            <td colspan="2">4 (хорошо)</td>
+        </tr>
+        <tr>
+            <td class="title-item" colspan="6">3. Воздушная навигация</td>
+            <td colspan="2">1 ак. ч.</td>
+            <td colspan="2">4 (хорошо)</td>
+        </tr>
+        <tr>
+            <td class="title-item" colspan="6">4. Авиационная метеорология</td>
+            <td colspan="2">1 ак. ч.</td>
+            <td colspan="2">4 (хорошо)</td>
+        </tr>
+        <tr>
+            <td class="title-item" colspan="6">5. Выполнение полетов КВС с правого пилотского сиденья (при наличии допуска у пилота)</td>
+            <td colspan="2">1 ак. ч.</td>
+            <td colspan="2">4 (хорошо)</td>
+        </tr>
+        <tr>
+            <td class="title-item" colspan="6">6. Правила ведения радиотелефонной связи и радиообмена</td>
+            <td colspan="2">1 ак. ч.</td>
+            <td colspan="2"> 5 (отлично)</td>
+        </tr>
+        <tr>
+            <td class="title-item" colspan="6">7. Международные правила полетов<br>Фразеология радиообмена на английском языке.</td>
+            <td colspan="2">1 ак. ч.</td>
+            <td colspan="2"> 5 (отлично)</td>
+        </tr>
+        <tr>
+            <td class="title-item" colspan="6">8. Перечень минимально исправного оборудования</td>
+            <td colspan="2">1 ак. ч.</td>
+            <td colspan="2"> 5 (отлично)</td>
+        </tr>
+        <tr>
+            <td class="title-item" colspan="6">9. Полеты в условиях RVSM и RNP (PBN)</td>
+            <td colspan="2">1 ак. ч.</td>
+            <td colspan="2"> 5 (отлично)</td>
+        </tr>
+        <tr>
+            <td class="title-item" colspan="6">10. Вывод ВС из сложного пространственного положения, предсрывных режимов, режима сваливания.</td>
+            <td colspan="2">1 ак. ч.</td>
+            <td colspan="2"> 5 (отлично)</td>
+        </tr>
+        <tr>
+            <td class="title-item" colspan="6">11. Выполнение полётов в особых условиях</td>
+            <td colspan="2">1 ак. ч.</td>
+            <td colspan="2"> 5 (отлично)</td>
+        </tr>
+        <tr>
+            <td class="title-item" colspan="6">12. Действия при срабатывании систем предупреждения о близости земли EGPWS</td>
+            <td colspan="2">1 ак. ч.</td>
+            <td colspan="2"> 5 (отлично)</td>
+        </tr>
+        <tr>
+            <td class="title-item" colspan="6">13. Действия при срабатывании БСПС (TCAS)</td>
+            <td colspan="2">1 ак. ч.</td>
+            <td colspan="2"> 5 (отлично)</td>
+        </tr>
+        <tr>
+            <td class="title-item" colspan="6">14. Выполнение полётов в условиях сдвига ветра</td>
+            <td colspan="2">1 ак. ч.</td>
+            <td colspan="2"> 5 (отлично)</td>
+        </tr>
+        <tr>
+            <td class="title-item" colspan="6">15. Заход на посадку в условиях II –III категории ИКАО и взлетов при видимости менее 400 метров</td>
+            <td colspan="2">1 ак. ч.</td>
+            <td colspan="2"> 5 (отлично)</td>
+        </tr>
+    </tbody>
+</table>
+
+            <p style="line-height: 2; text-align: left; font-size: 14px;">ИТОГОВАЯ АТТЕСТАЦИЯ (ЭКЗАМЕН) ({{section.duration_hours}}ак. ч.) {{ grade|default:"___" }}<br></p>
+
+    </div>
+{% endblock %}

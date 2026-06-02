@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Журнал: {{ enrollment.module.code }}</title>
+    <style>
+        /* Базовые стили для печати */
+        body { font-family: "Times New Roman", serif; font-size: 11pt; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #000; padding: 4px 8px; }
+        .stage { background: #f0f0f0; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h3>Журнал учёта результатов</h3>
+    <p><strong>Слушатель:</strong> {{ enrollment.student.full_name }}<br>
+    <strong>Модуль:</strong> {{ enrollment.module.code }}<br>
+    <strong>№ журнала:</strong> {{ enrollment.group }}-{{ enrollment.application }}</p>
+
+    {% block content %}{% endblock %}
+
+    <p style="margin-top: 40px;">
+        Преподаватель: ___________________ / {{ evaluator.name }} /<br>
+        Дата: {{ today|date:"d.m.Y" }}
+    </p>
+</body>
+</html>

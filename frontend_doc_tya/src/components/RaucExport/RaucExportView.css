@@ -1,0 +1,184 @@
+/* RaucExportView.css */
+.rauc-container { padding: 0; }
+
+.rauc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.rauc-header h2 { margin: 0; font-size: 1.25rem; color: #212529; }
+
+.rauc-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.msg-box {
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+.msg-success { background: #d1e7dd; color: #0f5132; }
+.msg-error { background: #f8d7da; color: #842029; }
+
+.table-wrapper {
+  overflow-x: auto;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.rauc-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 700px;
+}
+
+.rauc-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 13px;
+  color: #495057;
+  font-weight: 600;
+  background: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.rauc-table td {
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #212529;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+.rauc-table td.empty {
+  text-align: center;
+  padding: 30px;
+  color: #6c757d;
+}
+
+.col-select {
+  width: 40px;
+  text-align: center;
+}
+
+.col-select input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.rauc-table tbody tr.selected {
+  background: #e7f1ff;
+}
+
+.rauc-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.text-muted { color: #6c757d; font-size: 0.85em; }
+
+.mark-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  background: #0d6efd;
+  color: white;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  min-width: 36px;
+  text-align: center;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-primary { background: #0d6efd; color: white; }
+.btn-primary:hover:not(:disabled) { background: #0b5ed7; }
+.btn-primary:disabled { background: #6c757d; cursor: not-allowed; opacity: 0.7; }
+
+.btn-outline { background: white; color: #0d6efd; border: 1px solid #0d6efd; }
+.btn-outline:hover { background: #e7f1ff; }
+
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #6c757d;
+  font-size: 1rem;
+}
+
+/* Сортируемые заголовки */
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+  position: relative;
+}
+
+.sortable:hover {
+  background: #f8f9fa;
+}
+
+.sortable::after {
+  content: ' ⇅';
+  font-size: 10px;
+  color: #adb5bd;
+  margin-left: 4px;
+}
+
+.sortable:hover::after {
+  color: #0d6efd;
+}
+
+/* Колонка экспорта */
+.col-export {
+  width: 80px;
+  text-align: center;
+}
+
+.export-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #d4edda;
+  color: #155724;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.export-badge.pending {
+  background: #e9ecef;
+  color: #6c757d;
+  font-size: 18px;
+  font-weight: normal;
+}
+
+/* Подсветка выбранной строки */
+.rauc-table tbody tr.selected {
+  background: #e7f1ff !important;
+}
+
+/* Адаптив */
+@media (max-width: 1024px) {
+  .col-export {
+    display: none; /* Скрываем на мобильных, если тесно */
+  }
+}

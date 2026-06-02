@@ -1,0 +1,129 @@
+{% load static %}
+{% if debug %}
+<div style="position:fixed; top:0; left:0; background:#222; color:#0f0; padding:10px; font-family:monospace; font-size:12px; z-index:9999; max-height:80vh; overflow:auto; width:400px;">
+    <strong>📦 DEBUG CONTEXT:</strong>
+    <pre>{{ context_dump }}</pre>
+</div>
+{% endif %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>УДОСТОВЕРЕНИЕ {{ module.title|slice:":8" }}</title>
+    <link rel="stylesheet" href="course.css">
+ <link rel="stylesheet" href="{% static 'css/course.css' %}">
+</head>
+<body>
+
+<!-- <h3 class="session-title">{{ rating.session.title }}</h3> -->
+
+<table>
+
+  <tr class="header-title">
+    <td colspan="3" class="header-title-logo"><img src="{% static 'logo-nordstar.png' %}"  alt="Логотип NordStar" class="logo-img"></td>
+    <td colspan="8" style="padding-top: 20px;">УДОСТОВЕРЕНИЕ ({{module.title|slice:":10" }})</td>
+    <td colspan="2">Пприложение {{course.attachment}}<br>{{module.code}}</td>
+  </tr>
+</table>
+
+<br>
+
+
+<table>
+    <tr class="left-column">
+        <td colspan="3" class="left-td">
+            <div>
+                <p>
+                    Авиационный<br>
+                    учебный центр<br>
+                    Акционерного общества<br>
+                    «Авиакомпания<br>
+                    «НордСтар»
+                </p>
+            </div>
+            <div class="gap"></div>
+
+            <div>
+
+                <p>Лицензия <span>{{license.license_number}}</span><br>
+                    выдана {{license.license_date}}<br>
+                    Министерством образования Красноярского края
+                </p>
+            </div>
+            <div class="gap"></div>
+
+            <div>
+                <p>Сертификат АУЦ  <span>{{license.favt_cert_number}}</span><br>
+                выдан {{license.favt_cert_date}}<br>
+                Федеральным агентством воздушного транспорта
+                </p>
+            </div>
+        </td>
+        <td colspan="10" class="right-td">
+            <div>
+            <p style="line-height: 2.5;">
+                Настоящим подтверждается, что<br>
+
+                ФАМИЛИЯ {{student.surname}}<br>
+
+                ИМЯ, ОТЧЕСТВО {{student.name}}{{student.patronymic}}<br>
+
+                ДАТА РОЖДЕНИЯ {{student.date_of_birth}}<br>
+            </p>
+            <p>
+                В период с {{enrollment.enrolled_at}}. проходил (а) самостоятельную подготовку с использованием ЭО,<br>
+                с {{enrollment.start_face_to_face}}. по {{enrollment.completed_at}}. обучался (лась) в АУЦ АО «АК «НордСтар»<br>
+            </p>
+            <p>
+                по {{enrollment.course.title}},<br>
+                утверждённой {{course.approved}}, {{course.approved_date}} г.<br>
+                (орган, утвердивший программу, дата утверждения)
+            </p>
+            <p style="line-height: 2;">
+                {{enrollment.module.title}}. {{enrollment.stage.title}}.
+
+                в объёме {{module.duration}} академических часов, в том числе {{sdo-time|date:"d.m.Y"|default:"_______" }} ак. ч. с использованием электронного обучения<br>
+
+                И показал (а) следующие знания:
+            </p>
+
+<div>Динамический контент</div>
+
+
+            <p style="line-height: 2; text-align: left;">
+                ИТОГОВАЯ АТТЕСТАЦИЯ (ЭКЗАМЕН) ({{section.duration_hours}}ак. ч.) {{ grade|default:"___" }}<br>
+                ДОКУМЕНТ ОФОРМИЛ: подписано простой ЭП {{certificate.prepared_by}}(подпись/ФИО)<br>
+                ДИРЕКТОР АУЦ<img src="{% static 'sign_pve.png' %}"  alt="Логотип NordStar" class="sign-img">(подпись/ФИО)
+            </p>
+
+            <p>
+                Регистрационный номер {{ cert_number }}<br>
+
+                Дата выдачи {{ issued_at }}.
+
+            </p>
+
+            <p style="font-style: italic;">
+                Удостоверение является документом о повышении квалификации, выдаваемым
+                АУЦ АО «АК «НордСтар» по результатам дополнительного профессионального образования
+            </p>
+
+            </div>
+        </td>
+    </tr>
+</table>
+
+
+
+
+
+<button class="print-btn" onclick="window.print()">🖨 Распечатать</button>
+
+<a href="mailto:veguschin@nordstar.ru?subject=Задание на тренировку: {{ rating.pilot.name|urlencode }} – {{ rating.session.title|urlencode }}&body=Здравствуйте!%0A%0AПрилагаю задание на тренировку {{ rating.session.title|urlencode }} для пилота {{ rating.pilot.name|urlencode }}.%0A%0AСсылка на задание:%0A{{ secure_print_url|urlencode }}%0A%0AС уважением."
+   class="print-btn" style="margin-left: 12px; text-decoration: none; display: inline-block;">
+  ✉️ Отправить на почту
+</a>
+
+</body>
+</html>
+

@@ -1,0 +1,30 @@
+{% extends "journals/journal_base.html" %}
+
+{% block content %}
+<table>
+    <thead>
+        <tr>
+            <th>Раздел</th>
+            <th>Часы</th>
+            <th>Оценка</th>
+            <th>Дата</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for section in enrollment.module.section_set.all %}
+        <tr>
+            <td>{{ section.order }}. {{ section.title }}</td>
+            <td>{{ section.duration_hours }}</td>
+            <td>
+                {% if section.grade_type == 'numeric' %}
+                    {{ results|get_item:section.id|default:"—" }}
+                {% elif section.grade_type == 'binary' %}
+                    {% if results|get_item:section.id %}✅{% else %}❌{% endif %}
+                {% else %}—{% endif %}
+            </td>
+            <td></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,8 @@
+<!--backend_doc_tya/templates/admin/api/course/change_list.html-->
+{% extends "admin/change_list.html" %}
+{% block object-tools-items %}
+  <li>
+<a href="{% url 'admin:course_import_excel' %}" class="addlink">📥 Импорт курсов из Excel</a>
+  </li>
+  {{ block.super }}
+{% endblock %}

@@ -1,0 +1,125 @@
+{% load static %}
+<!--<!DOCTYPE html>-->
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>УДОСТОВЕРЕНИЕ {{ module.title|slice:":8" }}</title>
+
+    {% if not print_mode %}
+        <base href="{{ base_url }}">
+    {% endif %}
+
+    <link rel="stylesheet" href="{% static 'css/course.css' %}">
+</head>
+<body>
+
+
+<table>
+  <tr class="header-title">
+    <td colspan="3" class="header-title-logo">
+        <img src="{% static 'logo-nordstar.png' %}" alt="Логотип NordStar" class="logo-img">
+    </td>
+    <td colspan="8" style="padding-top: 10px;">
+        УДОСТОВЕРЕНИЕ ({{ module.title|slice:":8" }})
+    </td>
+    <td colspan="2">
+        Приложение {{ module.attachment_number|default:"__" }}<br>
+        {{ module.code|slice:":10"  }}
+    </td>
+  </tr>
+</table>
+
+<br>
+
+<table>
+    <tr class="left-column">
+        <td colspan="3" class="left-td">
+            <!-- Левая колонка: реквизиты АУЦ -->
+            <div class="info-block">
+                <div>
+                    <p>
+                        Авиационный<br>
+                        учебный центр<br>
+                        Акционерного общества<br>
+                        «Авиакомпания<br>
+                        «НордСтар»
+                    </p>
+                </div>
+
+                <div>
+                    {% if license %}
+                    <p>Лицензия <span>{{license.license_number}}</span><br>
+                        выдана {{license.license_date}}<br>
+                        Министерством образования Красноярского края<br><br>
+                        Сертификат АУЦ  <span>{{license.favt_cert_number}}</span><br>
+                        выдан {{license.favt_cert_date}}<br>
+                        Федеральным агентством воздушного транспорта
+                    </p>
+                    {% else %}
+                  <p style="color:#999; font-style:italic;">⚠️ Лицензия не найдена в базе</p>
+                {% endif %}
+                </div>
+
+            </div>
+        </td>
+        
+        <td colspan="10" class="right-td">
+            <!-- Правая колонка: данные студента + динамический контент -->
+            <div class="base-content">
+                <p style="line-height: 2;">
+                    Настоящим подтверждается, что<br>
+                    ФАМИЛИЯ <strong>{{ student.surname }}</strong> / {{student.surname_latin}}<br>
+                    ИМЯ, ОТЧЕСТВО <strong>{{ student.name }} {{ student.patronymic }}</strong>  / {{student.name_latin}}<br>
+                    ДАТА РОЖДЕНИЯ {{ student.date_of_birth }}<br>
+                </p>
+                <p>
+                    В период с {{ enrollment.enrolled_at|date:"d.m.Y" }} проходил(а) самостоятельную подготовку с использованием ЭО,<br>
+                    с {{ enrollment.start_face_to_face|date:"d.m.Y" }} по {{ enrollment.completed_at|date:"d.m.Y" }} обучался(ась) в АУЦ АО «АК «НордСтар»<br>
+                </p>
+                <p>
+                    по {{ course.name|default:course.title }},<br>
+                    утверждённой {{ course.approved }}, {{ course.approved_date|date:"d.m.Y" }} г.<br>
+                    (орган, утвердивший программу, дата утверждения)
+                </p>
+                <p style="line-height: 2;">
+                    {{ module.title }}. {{ enrollment.stage.title|default:"" }}<br>
+                    в объёме {{ module.duration }} академических часов, 
+                    {% if module.elearning_hours %}в том числе {{ module.elearning_hours }} ак. ч. с использованием электронного обучения{% endif %}<br>
+
+                </p>
+
+                <!-- 🎯 БЛОК ДЛЯ ДИНАМИЧЕСКОГО КОНТЕНТА -->
+                {% block certificate_content %}{% endblock %}
+
+                <p style="line-height: 2; text-align: left;">
+
+                    ДОКУМЕНТ ОФОРМИЛ: подписано простой ЭП {{ prepared_by|default:"_______" }} (подпись/ФИО)<br>
+                    ДИРЕКТОР АУЦ <img src="{% static 'sign_pve.png' %}" alt="Подпись" style="width: 250px; vertical-align: middle; padding: 20px;" > (подпись/ФИО)
+                </p>
+
+                <p>
+                    Регистрационный номер {{ cert_number }}<br>
+                    Дата выдачи {{ enrollment.completed_at }}
+                </p>
+
+                <p style="font-style: italic; font-size: 9px; margin-top: 20px;">
+                    Удостоверение является документом о повышении квалификации, выдаваемым
+                    АУЦ АО «АК «НордСтар» по результатам дополнительного профессионального образования
+                </p>
+            </div>
+        </td>
+    </tr>
+</table>
+
+{% block extra_footer %}{% endblock %}
+
+{% if not for_pdf %}
+<button class="print-btn" onclick="window.print()">🖨 Распечатать</button>
+<a href="mailto:veguschin@nordstar.ru?subject=УДОСТОВЕРЕНИЕ : {{ module.code}} – {{student.surname}}&body=Здравствуйте!%0A%0AУДОСТОВЕРЕНИЕ  {{ cert_number }} для слушателя {{student.surname}}.Cсылка."
+   class="print-btn" style="margin-left: 12px; text-decoration: none; display: inline-block;">
+  ✉️ Отправить на почту
+</a>
+{% endif %}
+
+</body>
+</html>

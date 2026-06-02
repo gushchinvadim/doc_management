@@ -1,0 +1,31 @@
+.schedule-export {
+  margin: 16px 0;
+}
+
+.btn-export {
+  background: #22c55e;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-export:hover {
+  background: #16a34a;
+}
+
+.btn-export:disabled {
+  background: #86efac;
+  cursor: not-allowed;
+}
+
+.export-error {
+  margin-top: 8px;
+  color: #dc2626;
+  font-size: 0.9em;
+}

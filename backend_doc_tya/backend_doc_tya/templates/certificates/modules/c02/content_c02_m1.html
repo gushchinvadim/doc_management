@@ -1,0 +1,82 @@
+{% extends "certificates/course_base.html" %}
+{% load static %}
+
+{# 🔹 Templatetag для расшифровки оценок #}
+{% block certificate_content %}
+<table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:11px; margin:15px 0;">
+    <thead>
+        <tr style="background:#d0d0d0;">
+            <th style="border:1px solid #000; padding:6px; text-align:center; width:20%;">Этапы подготовки</th>
+            <th style="border:1px solid #000; padding:6px; text-align:center; width:50%;">Тематическое содержание этапов подготовки</th>
+            <th style="border:1px solid #000; padding:6px; text-align:center; width:15%;">Продолжительность подготовки</th>
+            <th style="border:1px solid #000; padding:6px; text-align:center; width:15%;">Итоговая оценка знаний, навыков (умений)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for sr in section_results %}
+        {# 🔹 Пропускаем строку с итоговой оценкой по этапу #}
+        {% if "Итоговая оценка" not in sr.section__title and "Этапа" not in sr.section__title %}
+        <tr>
+            <!-- Этап (только в первой строке) -->
+            {% if forloop.first %}
+            <td style="border:1px solid #000; padding:6px; vertical-align:middle; text-align:center;" rowspan="{{ section_results|length }}">
+                Этап 1<br>Теоретическая<br>(наземная) подготовка
+            </td>
+            {% endif %}
+
+            <!-- Тема -->
+            <td style="border:1px solid #000; padding:6px;">
+                {{ forloop.counter }}. {{ sr.section__title }}
+            </td>
+
+            <!-- Часы -->
+            <td style="border:1px solid #000; padding:6px; text-align:center;">
+                {{ sr.hours_completed|floatformat:1 }} ак. ч.
+            </td>
+
+            <!-- Оценка с расшифровкой -->
+            <td style="border:1px solid #000; padding:6px; text-align:center; font-style:italic; color:black;">
+                {% if sr.section__grade_type == 'binary' %}
+                    {% if sr.is_passed %}Зачтено{% else %}Не зачтено{% endif %}
+                {% else %}
+                    {% if sr.grade == 5 %}
+                        5 (отлично)
+                    {% elif sr.grade == 4 %}
+                        4 (хорошо)
+                    {% elif sr.grade == 3 %}
+                        3 (удовлетворительно)
+                    {% elif sr.grade == 2 %}
+                        2 (неудовлетворительно)
+                    {% else %}
+                        {{ sr.grade|default:"" }}
+                    {% endif %}
+                {% endif %}
+            </td>
+        </tr>
+        {% endif %}
+        {% empty %}
+        <tr>
+            <td colspan="4" style="border:1px solid #000; padding:10px; text-align:center; color:#777;">
+                Результаты по разделам ещё не внесены
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{# 🔹 Итоговая аттестация с расшифровкой #}
+<p style="line-height:1.8; text-align:left; font-size:12px; margin-top:15px; font-weight:bold;">
+    ИТОГОВАЯ АТТЕСТАЦИЯ (ЭКЗАМЕН) ({{ final_exam_hours|floatformat:1 }} ак. ч.)
+    {% if final_grade == 5 %}
+        5 (отлично)
+    {% elif final_grade == 4 %}
+        4 (хорошо)
+    {% elif final_grade == 3 %}
+        3 (удовлетворительно)
+    {% elif final_grade == 2 %}
+        2 (неудовлетворительно)
+    {% else %}
+        {{ final_grade|default:"___" }}
+    {% endif %}
+</p>
+{% endblock %}

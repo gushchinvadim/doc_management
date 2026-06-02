@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>РАСПИСАНИЕ</title>
+    <style>
+        body {font-family: 'Times New Roman', serif; font-size: 11pt; margin: 1cm; color: #000;}
+        table {width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 10px;}
+        td, th {border: 1px solid black; padding: 3px 4px; vertical-align: top; word-wrap: break-word; font-size: 10pt;}
+
+        .header-table td {border: none; vertical-align: middle;}
+        .logo-img {max-height: 35px; width: auto; display: block; margin-left: 10px;}
+        .main-title {text-align: center; font-weight: bold; font-size: 12pt; padding-top: 8px;}
+
+        .info-block p {margin: 4px 0; text-align: left;}
+        .signatures {display: flex; justify-content: space-between; margin-top: 15px;}
+        .signatures p {margin: 0; width: 48%;}
+
+        .stage-row td {background-color: #edebeb; font-weight: bold; text-align: center;}
+        .break-row td {background-color: #f8f9fa; color: #666; text-align: center; font-style: italic; padding: 4px;}
+        .sdo-badge {background: #e8f5e9; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 9pt;}
+
+        thead th {background-color: #c0c0c0; text-align: center; font-weight: bold;}
+
+        @page {size: A4; margin: 8mm 12mm 10mm 15mm;}
+        @media print {
+            .no-print {display: none !important;}
+            body {margin: 0; padding: 0;}
+            table {page-break-inside: auto;}
+            tr {page-break-inside: avoid; page-break-after: auto;}
+            thead {display: table-header-group;}
+        }
+    </style>
+</head>
+<body>
+    <!-- Шапка -->
+    <table class="header-table">
+        <tr>
+            <td style="width: 30%;"><img src='static/logo-nordstar.png' alt="NordStar" class="logo-img"></td>
+            <td class="main-title" style="width: 70%;">РАСПИСАНИЕ ({{ course_title }})</td>
+        </tr>
+    </table>
+    <table class="header-table"><tr><td style="text-align: right; font-weight: bold; border: none;">{{ module_code }}</td></tr></table>
+
+    <!-- Инфо -->
+    <div class="info-block">
+        <p>Группа: <strong>{{ group_code }}</strong></p>
+        <p>Модуль: {{ module_title }}</p>
+        <p>Начало занятий: {{ start_date }}</p>
+    </div>
+
+    <div class="signatures">
+        <p>Куратор: <u>{{ curator_name }}</u></p>
+        <p style="text-align: right;">Утверждаю: <u>{{ director_name }}</u></p>
+    </div>
+
+    <!-- Таблица -->
+    <table border="1">
+        <thead>
+            <tr>
+                <th style="width: 30px;">№ П/П</th>
+                <th colspan="2">Дата начала</th>
+                <th colspan="2">Продолж. (план)</th>
+                <th colspan="2">Расписание часов</th>
+                <th colspan="3">Содержание этапов</th>
+                <th colspan="3">Темы подготовки</th>
+                <th colspan="2">Преподаватель/Инструктор</th>
+                <th colspan="2">Место проведения</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for day in days %}
+                {% for row in day.items %}
+                    <!-- Разделитель этапов (если первый элемент дня или сменился этап) -->
+                    {% if not row.is_break %}
+                        {% ifchanged row.obj.stage.id %}
+                            <tr class="stage-row">
+                                <td colspan="17">{{ row.obj.stage.title }}</td>
+                            </tr>
+                        {% endifchanged %}
+                    {% endif %}
+
+                    {% if row.is_break %}
+                        <tr class="break-row">
+                            <td colspan="17">☕ Большой перерыв</td>
+                        </tr>
+                    {% elif row.is_sdo %}
+                        <tr>
+                            <td style="text-align: center;">{{ row.row_num }}</td>
+                            <td colspan="2" style="text-align: center;">{{ day.date|date:"d.m.Y" }}</td>
+                            <td colspan="2" style="text-align: center;">{{ row.obj.section.duration_hours }}</td>
+                            <td colspan="2" style="text-align: center;"><span class="sdo-badge">📡 СДО</span></td>
+                            <td colspan="3">{{ row.obj.section.title }}</td>
+                            <td colspan="3">{{ row.obj.section.subsection.title|default:"-" }}</td>
+                            <td colspan="2">{{ row.obj.instructor.get_full_name|default:"-" }}</td>
+                            <td colspan="2">{{ row.obj.get_location_display|default:"-" }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td style="text-align: center;">{{ row.row_num }}</td>
+                            <td colspan="2" style="text-align: center;">{{ day.date|date:"d.m.Y" }}</td>
+                            <td colspan="2" style="text-align: center;">{{ row.obj.section.duration_hours }}</td>
+                            <td colspan="2" style="text-align: center;">{{ row.obj.get_time_slot_display|default:"-" }}</td>
+                            <td colspan="3">{{ row.obj.section.title }}</td>
+                            <td colspan="3">{{ row.obj.section.subsection.title|default:"-" }}</td>
+                            <td colspan="2">{{ row.obj.instructor.get_full_name|default:"-" }}</td>
+                            <td colspan="2">{{ row.obj.get_location_display|default:"-" }}</td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Кнопки (скрыты при печати) -->
+    <div class="no-print" style="margin-top: 20px; text-align: center;">
+        <button onclick="window.print()" style="padding: 8px 16px; cursor: pointer;">🖨 Распечатать / Сохранить PDF</button>
+        <a href="mailto:veguschin@nordstar.ru?subject=УДОСТОВЕРЕНИЕ : {{ module_code }}&body=Здравствуйте!%0A%0AУДОСТОВЕРЕНИЕ для слушателя."
+           style="margin-left: 15px; padding: 8px 16px; background: #007bff; color: white; text-decoration: none; border-radius: 4px;">
+            ✉️ Отправить на почту
+        </a>
+    </div>
+</body>
+</html>

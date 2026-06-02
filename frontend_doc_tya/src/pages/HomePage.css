@@ -1,0 +1,217 @@
+/* src/pages/HomePage.css */
+
+/* ===== Основной контейнер ===== */
+.home-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #f4f6f9;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.home-container {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  /* max-width: 1400px; */
+  margin: 0 auto;
+  width: 95%;
+  padding: 14px;
+  gap: 14px;
+}
+
+/* ===== Боковая панель ===== */
+.sidebar {
+  width: 260px;
+  background: white;
+  border-radius: 10px;
+  /* padding: 10px; */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: fit-content;
+  position: sticky;
+  top: 90px;
+}
+
+/* ===== Кнопки меню ===== */
+.menu-btn {
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  text-align: left;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #495057;
+  font-weight: 500;
+}
+
+.menu-btn:hover {
+  background: #f8f9fa;
+}
+
+.menu-btn.active {
+  background: #e7f1ff;
+  color: #021e49;
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 #072c64;
+}
+
+/* ===== Основной контент ===== */
+.main-content {
+  flex: 1;
+  background: white;
+  border-radius: 10px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  min-height: 600px;
+}
+
+/* ===== Подменю сертификатов ===== */
+.submenu {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.submenu-label {
+  font-size: 11px;
+  color: #6c757d;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.submenu-btn {
+  padding: 10px 12px;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  text-align: left;
+  font-size: 12px;
+  cursor: pointer;
+  color: #495057;
+  transition: all 0.15s;
+  line-height: 1.3;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.submenu-btn:hover {
+  background: #e9ecef;
+}
+
+.submenu-btn.active {
+  background: #e7f1ff;
+  border-color: #031735;
+  color: #051d40;
+  font-weight: 600;
+}
+
+.module-btn-text {
+  flex: 1;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* ===== Заголовок раздела ===== */
+.section-title {
+  margin: 0 0 16px 0;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 18px;
+  color: #333;
+  font-weight: 600;
+}
+
+/* ===== Заглушка (плейсхолдер) ===== */
+.placeholder {
+  padding: 40px;
+  text-align: center;
+  color: #6c757d;
+  font-size: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px dashed #dee2e6;
+  margin: 20px 0;
+}
+
+/* ===== Утилиты ===== */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+  color: #6c757d;
+  font-size: 16px;
+}
+
+.schedule-selector .form-input.readonly {
+  background: #f5f5f5;
+  cursor: not-allowed;
+  color: #666;
+}
+/* Стили для нового селектора расписания */
+.schedule-wrapper { padding: 20px;  margin: 0;}
+.schedule-selector { 
+  display: flex; 
+  gap: 12px; 
+  align-items: flex-end; 
+  flex-wrap: wrap; 
+  margin-bottom: 20px; 
+  padding: 16px; 
+  background: #f8f9fa; 
+  border-radius: 8px; 
+}
+.schedule-selector label { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 6px; 
+  font-size: 0.95em; 
+  min-width: 200px; 
+}
+.schedule-selector .form-select,
+.schedule-selector .form-input { 
+  padding: 8px 12px; 
+  border: 1px solid #ced4da; 
+  border-radius: 4px; 
+  font-size: 1em; 
+}
+.schedule-selector .readonly { 
+  background: #e9ecef; 
+  cursor: not-allowed; 
+}
+.schedule-selector .btn-secondary { 
+  padding: 8px 16px; 
+  height: fit-content; 
+}
+
+/* Состояния загрузки/ошибки в селекторе */
+.loading-small, .error-small { 
+  font-size: 0.9em; 
+  padding: 8px 12px; 
+  min-width: 200px; 
+}
+.loading-small { color: #666; }
+.error-small { color: #721c24; background: #f8d7da; border-radius: 4px; }
+
+/* Адаптив для мобильных */
+@media (max-width: 768px) {
+  .schedule-selector { 
+    flex-direction: column; 
+    align-items: stretch; 
+  }
+  .schedule-selector label { 
+    min-width: auto; 
+  }
+}

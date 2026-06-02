@@ -1,0 +1,87 @@
+
+body {
+    font-family: 'Times New Roman', serif;
+    font-size: 11pt;
+
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+
+}
+
+td, th {
+
+    padding: 0; /* Убираем дефолтные отступы в ячейках */
+
+}
+
+td.left-td {
+
+    border: 1px solid #333;
+    border-top: none;     /* Базовая граница со всех сторон */
+    border-left: none;       /* Убираем правую */
+    border-bottom: none;      /* Убираем нижнюю */
+    padding: 8px 12px;
+}
+
+.info-block {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%; /* обязательно: задайте фиксированную высоту, 100vh или унаследуйте от родителя */
+}
+
+
+td.right-td {
+text-align:start;
+    text-align: center;
+    border: 1px solid #333;
+    border-top: none;     /* Базовая граница со всех сторон */
+    border-right: none;       /* Убираем правую */
+    border-bottom: none;      /* Убираем нижнюю */
+    padding: 8px 12px;
+}
+
+.base-content {
+text-align:start;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.header-title {
+    text-align: center;
+    border:1px solid #000;
+    padding:6px;
+}
+
+.logo-img {
+
+    max-height: 30px;
+    padding-left: 20px;
+    width: auto;
+    display: block;
+}
+
+.session-title {
+    text-align: right;
+}
+
+}
+
+.sign-img {
+    width: 250px;
+    vertical-align: middle;
+    padding: 20px;
+}
+
+@print {
+  size: A4;               /* Размер листа (можно убрать, если не нужно) */
+  margin: 5mm 5mm 5mm 20mm; /* верх | право | низ | лево */
+}
+
+
+

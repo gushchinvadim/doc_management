@@ -1,0 +1,47 @@
+<!--backend_doc_tya/templates/admin/api/import_data.html-->
+{% extends "admin/base.html" %}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Главная</a>
+    &rsaquo; <a href="{% url changelist_url %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    &rsaquo; Импорт
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+<!--    <h1>{{ title }}</h1>-->
+
+    <!-- Подсказки по формату -->
+    {% if model_name == 'student' %}
+    <div class="help" style="background:#f8f9fa; padding:12px; border-radius:4px; margin:15px 0; font-size:13px;">
+        <strong>Ожидается 9 колонок:</strong><br>
+        surname | name | patronymic | sex | date_of_birth | snils | employee_id | is_active | aircraft_type
+    </div>
+    {% elif model_name == 'staff' %}
+    <div class="help" style="background:#f8f9fa; padding:12px; border-radius:4px; margin:15px 0; font-size:13px;">
+        <strong>Ожидается 4 колонки:</strong><br>
+        name | rauts_id | position | is_active
+    </div>
+    {% elif model_name == 'course' %}
+    <div class="help" style="background:#f8f9fa; padding:12px; border-radius:4px; margin:15px 0; font-size:13px;">
+        <strong>Ожидается 6+ колонок:</strong><br>
+        COMPANY_CODE | COURSE | MODULE | MOD_ID | STAGE | SECTION | ...
+    </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" style="max-width: 600px; margin-top: 20px;">
+        {% csrf_token %}
+        <fieldset class="module aligned">
+            <div class="form-row">
+                <label for="id_file">Файл Excel (.xlsx):</label>
+                <input type="file" name="file" id="id_file" accept=".xlsx" required class="vLargeTextField">
+            </div>
+        </fieldset>
+        <div class="submit-row" style="margin-top: 20px;">
+            <input type="submit" value="📥 Загрузить и обработать" class="default">
+            <a href="{% url changelist_url %}" class="button">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

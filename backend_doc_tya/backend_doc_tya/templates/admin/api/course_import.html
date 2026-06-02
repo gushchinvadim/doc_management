@@ -1,0 +1,26 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+{% block content %}
+<div id="content-main">
+
+  <form action="." method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <fieldset class="module aligned">
+      <div class="form-row">
+        {{ form.excel_file.label_tag }}
+        {{ form.excel_file }}
+        {% if form.excel_file.help_text %}
+          <p class="help">{{ form.excel_file.help_text|safe }}</p>
+        {% endif %}
+        {% if form.excel_file.errors %}
+          <p class="errornote">{{ form.excel_file.errors }}</p>
+        {% endif %}
+      </div>
+    </fieldset>
+    <div class="submit-row">
+      <input type="submit" value="Загрузить и импортировать" class="default">
+      <a href="{% url 'admin:api_course_changelist' %}" class="button cancel-link">Отмена</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
