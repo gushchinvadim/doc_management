@@ -3,14 +3,14 @@ import React, { useState, useEffect } from 'react';
 import {
   getSchedule, updateScheduleItems, finalizeSchedule,
   resetToDraft, getStaffList, exportScheduleExcel,
-  updateScheduleMeta  // 🔹 ДОБАВЛЕНО
+  updateScheduleMeta
 } from '../../api/schedule';
 
 const STATUS_LABELS = {
   draft: '📝 Черновик',
   active: '✅ Активно',
   finalized: '🔒 Зафиксировано',
-  archived: '📦 Архив'
+  archived: ' Архив'
 };
 
 const STATUS_COLORS = {
@@ -20,7 +20,6 @@ const STATUS_COLORS = {
   archived: '#777'
 };
 
-// 🔹 Константы для пересчета времени на фронте
 const LESSON_MIN = 45;
 const BREAK_MIN = 5;
 const BIG_BREAK = 40;
@@ -30,18 +29,17 @@ const PATTERNS = {
   'base-2': { count: 2 },
   'base-3': { count: 3 },
   'base-4': { count: 4 },
-  'base-5': { count: 5, big_break_after: 4 },  // 🔹 После 4-го часа (перед 5-м)
-  'base-6': { count: 6, big_break_after: 4 },  // 🔹 После 4-го часа (перед 5-м)
-  'base-7': { count: 7, big_break_after: 4 },  // 🔹 После 4-го часа (перед 5-м)
-  'base-8': { count: 8, big_break_after: 4 },  // 🔹 После 4-го часа (перед 5-м)
-  'base-9': { count: 9, big_break_after: 4 },  // 🔹 После 4-го часа (перед 5-м)
+  'base-5': { count: 5, big_break_after: 4 },
+  'base-6': { count: 6, big_break_after: 4 },
+  'base-7': { count: 7, big_break_after: 4 },
+  'base-8': { count: 8, big_break_after: 4 },
+  'base-9': { count: 9, big_break_after: 4 },
 };
 
 const fmt = (minutes) => {
   return `${String(Math.floor(minutes / 60) % 24).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
 };
 
-// 🔹 Функция пересчета расписания на фронте
 const getScheduleTimes = (detailCode, startTime = '09:00') => {
   if (detailCode === 'sdo') return 'СДО';
   if (detailCode === 'sim') return '1 час - брифинг (лекция)\n4 часа - тренажерная подготовка\n1 час - дебрифинг (лекция)';
@@ -59,7 +57,6 @@ const getScheduleTimes = (detailCode, startTime = '09:00') => {
     current = end;
 
     if (i < cfg.count) {
-      // 🔹 Большой перерыв после 4-го часа (перед 5-м)
       if (cfg.big_break_after && i === cfg.big_break_after) {
         slots.push(`Большой перерыв - ${BIG_BREAK} мин`);
         current += BIG_BREAK;
@@ -89,28 +86,27 @@ export default function ScheduleEditor({ scheduleId, enrollmentId, onBack }) {
     loadData();
   }, [scheduleId]);
 
-    const loadData = async () => {
+  const loadData = async () => {
     setLoading(true);
     setError('');
     try {
-        const [sched, staffList] = await Promise.all([
+      const [sched, staffList] = await Promise.all([
         getSchedule(scheduleId),
         getStaffList()
-        ]);
-        setSchedule(sched);
-        setStaff(staffList);
-        if (sched.items?.[0]?.date) {
+      ]);
+      setSchedule(sched);
+      setStaff(staffList);
+      if (sched.items?.[0]?.date) {
         setStartDate(sched.items[0].date);
-        }
-        // 🔹 Устанавливаем куратора и директора
-        setCuratorId(sched.curator || null);
-        setDirectorId(sched.director || null);
+      }
+      setCuratorId(sched.curator || null);
+      setDirectorId(sched.director || null);
     } catch (err) {
-        setError(`❌ ${err.message}`);
+      setError(`❌ ${err.message}`);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-    };
+  };
 
   const handleFieldChange = (itemId, field, value) => {
     setEditedItems(prev => ({
@@ -131,7 +127,13 @@ export default function ScheduleEditor({ scheduleId, enrollmentId, onBack }) {
   };
 
   const getItemEffectiveDetail = (item) => {
-    return getItemValue(item, 'override_detail') || item.effective_detail;
+    if (getItemValue(item, 'override_detail')) {
+      return getItemValue(item, 'override_detail');
+    }
+    if (item.subsection_detail) {
+      return item.subsection_detail;
+    }
+    return item.section_detail || '';
   };
 
   const getItemTimeString = (item) => {
@@ -140,53 +142,51 @@ export default function ScheduleEditor({ scheduleId, enrollmentId, onBack }) {
     return getScheduleTimes(detailCode, startTime);
   };
 
-    const handleSave = async () => {
+  const handleSave = async () => {
     const itemsToUpdate = Object.entries(editedItems).map(([id, changes]) => ({
-        id: parseInt(id),
-        ...changes
+      id: parseInt(id),
+      ...changes
     }));
 
     const hasCuratorDirectorChanges = 
-        curatorId !== (schedule.curator || null) || 
-        directorId !== (schedule.director || null);
+      curatorId !== (schedule.curator || null) || 
+      directorId !== (schedule.director || null);
 
     if (itemsToUpdate.length === 0 && !hasCuratorDirectorChanges) {
-        setSuccess('Нет изменений для сохранения');
-        setTimeout(() => setSuccess(''), 2000);
-        return;
+      setSuccess('Нет изменений для сохранения');
+      setTimeout(() => setSuccess(''), 2000);
+      return;
     }
 
     setSaving(true);
     setError('');
     try {
-        // 🔹 1. Сохраняем куратора и директора (если изменились)
-        if (hasCuratorDirectorChanges) {
+      if (hasCuratorDirectorChanges) {
         const updated = await updateScheduleMeta(scheduleId, {
-            curator: curatorId,
-            director: directorId
+          curator: curatorId,
+          director: directorId
         });
         setSchedule(updated);
         setCuratorId(updated.curator || null);
         setDirectorId(updated.director || null);
-        }
+      }
 
-        // 🔹 2. Сохраняем элементы расписания (если есть изменения)
-        if (itemsToUpdate.length > 0) {
+      if (itemsToUpdate.length > 0) {
         const updated = await updateScheduleItems(scheduleId, itemsToUpdate);
         setSchedule(updated);
         setCuratorId(updated.curator || null);
         setDirectorId(updated.director || null);
-        }
+      }
 
-        setEditedItems({});
-        setSuccess('✅ Сохранено');
-        setTimeout(() => setSuccess(''), 2000);
+      setEditedItems({});
+      setSuccess('✅ Сохранено');
+      setTimeout(() => setSuccess(''), 2000);
     } catch (err) {
-        setError(`❌ ${err.message}`);
+      setError(`❌ ${err.message}`);
     } finally {
-        setSaving(false);
+      setSaving(false);
     }
-    };
+  };
 
   const handleAutoFillDates = () => {
     if (!startDate) {
@@ -260,11 +260,11 @@ export default function ScheduleEditor({ scheduleId, enrollmentId, onBack }) {
   if (!schedule) return <div>Расписание не найдено</div>;
 
   const isFinalized = schedule.status === 'finalized';
-// 🔹 Проверяем изменения: items + куратор + директор
   const hasChanges = Object.keys(editedItems).length > 0 
-  || curatorId !== (schedule.curator || null)
-  || directorId !== (schedule.director || null);
+    || curatorId !== (schedule.curator || null)
+    || directorId !== (schedule.director || null);
 
+  // Группировка по этапам
   const groupedItems = {};
   (schedule.items || []).sort((a, b) => a.order - b.order).forEach(item => {
     const stageId = item.stage;
@@ -281,8 +281,6 @@ export default function ScheduleEditor({ scheduleId, enrollmentId, onBack }) {
   const sortedStages = Object.entries(groupedItems).sort(
     ([, a], [, b]) => a.order - b.order
   );
-
-
 
   return (
     <div style={{ padding: 20 }}>
@@ -307,48 +305,52 @@ export default function ScheduleEditor({ scheduleId, enrollmentId, onBack }) {
             </span>
           </span>
           <span><b>Версия:</b> {schedule.version}</span>
-          {schedule.curator_name && <span><b>Куратор:</b> {schedule.curator_name}</span>}
         </div>
-      </div>
-    <div style={{ marginTop: 15, paddingTop: 15, borderTop: '1px solid #dee2e6' }}>
-      <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', alignItems: 'center' }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.95em' }}>
-          <b>👤 Куратор:</b>
-          <select
-            value={curatorId || ''}
-            onChange={e => setCuratorId(e.target.value ? parseInt(e.target.value) : null)}
-            style={inputStyle}
-          >
-            <option value="">— не назначен —</option>
-            {staff.map(s => (
-              <option key={s.id} value={s.id}>{s.full_name || s.name}</option>
-            ))}
-          </select>
-        </label>
         
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.85em' }}>
-          <b>✅ Утверждающий (Директор):</b>
-          <select
-            value={directorId || ''}
-            onChange={e => setDirectorId(e.target.value ? parseInt(e.target.value) : null)}
-            style={inputStyle}
-          >
-            <option value="">— не назначен —</option>
-            {staff.map(s => (
-              <option key={s.id} value={s.id}>{s.full_name || s.name}</option>
-            ))}
-          </select>
-        </label>
-        
+        {/* Выбор куратора и директора */}
+        {!isFinalized && (
+          <div style={{ marginTop: 15, paddingTop: 15, borderTop: '1px solid #dee2e6' }}>
+            <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <b>👤 Куратор:</b>
+                <select
+                  value={curatorId || ''}
+                  onChange={e => setCuratorId(e.target.value ? parseInt(e.target.value) : null)}
+                  style={inputStyle}
+                >
+                  <option value="">— не назначен —</option>
+                  {staff.map(s => (
+                    <option key={s.id} value={s.id}>{s.full_name}</option>
+                  ))}
+                </select>
+              </label>
+              
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <b>✅ Утверждающий (Директор):</b>
+                <select
+                  value={directorId || ''}
+                  onChange={e => setDirectorId(e.target.value ? parseInt(e.target.value) : null)}
+                  style={inputStyle}
+                >
+                  <option value="">— не назначен —</option>
+                  {staff.map(s => (
+                    <option key={s.id} value={s.id}>{s.full_name}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+
+      {/* Панель управления */}
       <div style={{
         display: 'flex', gap: 10, marginBottom: 15,
         flexWrap: 'wrap', alignItems: 'center'
       }}>
         {!isFinalized && (
           <>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.95em'  }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
               Дата начала:
               <input
                 type="date"
@@ -361,20 +363,20 @@ export default function ScheduleEditor({ scheduleId, enrollmentId, onBack }) {
             <button onClick={handleAutoFillDates} className="btn-secondary">
               📅 Автозаполнить даты
             </button>
-                <button
-                onClick={handleSave}
-                disabled={saving || !hasChanges}
-                className="btn-primary"
-                >
-                {saving 
-                    ? '💾 Сохранение...' 
-                    : `💾 Сохранить${hasChanges ? ` (${
-                        Object.keys(editedItems).length + 
-                        (curatorId !== (schedule.curator || null) ? 1 : 0) + 
-                        (directorId !== (schedule.director || null) ? 1 : 0)
-                    })` : ''}`
-                }
-                </button>
+            <button
+              onClick={handleSave}
+              disabled={saving || !hasChanges}
+              className="btn-primary"
+            >
+              {saving 
+                ? ' Сохранение...' 
+                : `💾 Сохранить${hasChanges ? ` (${
+                    Object.keys(editedItems).length + 
+                    (curatorId !== (schedule.curator || null) ? 1 : 0) + 
+                    (directorId !== (schedule.director || null) ? 1 : 0)
+                  })` : ''}`
+              }
+            </button>
             <button onClick={handleFinalize} className="btn-success">
               🔒 Утвердить
             </button>
@@ -393,6 +395,7 @@ export default function ScheduleEditor({ scheduleId, enrollmentId, onBack }) {
       {error && <div style={{ color: 'red', marginBottom: 10 }}>{error}</div>}
       {success && <div style={{ color: 'green', marginBottom: 10 }}>{success}</div>}
 
+      {/* Таблица расписания */}
       <div style={{ overflowX: 'auto' }}>
         <table style={{
           width: '100%', borderCollapse: 'collapse',
@@ -403,7 +406,8 @@ export default function ScheduleEditor({ scheduleId, enrollmentId, onBack }) {
               <th style={thStyle}>№</th>
               <th style={thStyle}>Дата</th>
               <th style={thStyle}>Время</th>
-              <th style={thStyle}>Раздел</th>
+              <th style={{ ...thStyle, minWidth: 250 }}>Раздел</th>
+              <th style={{ ...thStyle, minWidth: 200 }}>Подраздел</th>
               <th style={{ ...thStyle, minWidth: 200 }}>Расписание</th>
               <th style={thStyle}>Инструктор</th>
               <th style={thStyle}>Место</th>
@@ -414,7 +418,7 @@ export default function ScheduleEditor({ scheduleId, enrollmentId, onBack }) {
             {sortedStages.map(([stageId, stage]) => (
               <React.Fragment key={stageId}>
                 <tr style={{ background: '#e2efda' }}>
-                  <td colSpan={8} style={{
+                  <td colSpan={9} style={{
                     padding: 8, fontWeight: 'bold',
                     border: '1px solid #ccc'
                   }}>
@@ -450,7 +454,16 @@ export default function ScheduleEditor({ scheduleId, enrollmentId, onBack }) {
                         />
                       </td>
                       <td style={tdStyle}>{item.section_title}</td>
-                      <td style={{ ...tdStyle, fontSize: '0.8em', lineHeight: '1.3' }}>
+                      <td style={tdStyle}>
+                        {item.subsection_title ? (
+                          <span style={{ fontSize: '0.9em' }}>
+                            {item.subsection_title}
+                          </span>
+                        ) : (
+                          <span style={{ color: '#ccc' }}>—</span>
+                        )}
+                      </td>
+                      <td style={{ ...tdStyle, fontSize: '0.85em', lineHeight: '1.3' }}>
                         {timeString ? (
                           <pre style={{ 
                             margin: 0, 

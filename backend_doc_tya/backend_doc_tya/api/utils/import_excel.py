@@ -160,42 +160,89 @@ def import_courses_excel(file_obj):
                 stage_cache[stage_key] = stage
             stage = stage_cache[stage_key]
 
-            # 4️⃣ SECTION (🔹 ОБНОВЛЕНО: поле detail вместо is_sdo)
+            # 4️⃣ SECTION
             sec_title = _clean(row_dict.get('SECTION'))
             if not sec_title: continue
 
+            sub_sec_title = _clean(row_dict.get('SUB_SECTION'))
+
+            # 🔹 Определяем: есть ли реальный подраздел?
+            # Подраздел реальный, если:
+            # 1. Он не пустой
+            # 2. Он НЕ совпадает с названием раздела (иначе это "ложный" подраздел)
+            has_real_subsection = (
+                    sub_sec_title
+                    and sub_sec_title != sec_title
+                    and sub_sec_title.lower() not in ('nan', 'none', 'null', 'нет', '')
+            )
+
             sec_order_raw = row_dict.get('ORDER')
-            sec_order = _to_int(sec_order_raw) if sec_order_raw is not None else Section.objects.filter(stage=stage).count()
+            sec_order = _to_int(sec_order_raw) if sec_order_raw is not None else Section.objects.filter(
+                stage=stage).count()
 
             grade_raw = _clean(row_dict.get('GRADE_TYPE', 'none')).lower()
             sec_grade = grade_raw if grade_raw in ['numeric', 'binary', 'none'] else 'none'
 
             min_raw = row_dict.get('MIN_SCORE')
-            sec_min = 1 if sec_grade == 'binary' else (_to_int(min_raw) if min_raw is not None and _clean(str(min_raw)) else None)
+            sec_min = 1 if sec_grade == 'binary' else (
+                _to_int(min_raw) if min_raw is not None and _clean(str(min_raw)) else None)
 
-            # 🔹 Обработка колонки DETAILS
+            # 🔹 Обработка DETAILS для раздела
             detail_raw = _clean(row_dict.get('DETAILS', '')).lower()
             detail_val = DETAIL_MAP.get(detail_raw, detail_raw)
             if detail_val not in VALID_DETAILS:
-                detail_val = 'sdo'  # Fallback по умолчанию
+                detail_val = 'sdo'
 
+            # 🔹 ВАЖНО: если есть реальный подраздел — НЕ перезаписываем detail раздела
+            # (он может быть разным для разных подразделов одного раздела)
             sec_defaults = {
                 'duration_hours': _to_float(row_dict.get('DURATION_HOURS')),
                 'grade_type': sec_grade,
                 'min_score': sec_min,
                 'order': sec_order,
-                'detail': detail_val,  # 🔹 ЗАМЕНА is_sdo → detail
+                # Если подраздела нет — сохраняем detail в раздел.
+                # Если есть — оставляем section.detail как есть (не трогаем).
             }
+
+            # Устанавливаем section.detail только если подраздела НЕТ
+            if not has_real_subsection:
+                sec_defaults['detail'] = detail_val
 
             section, sec_created = Section.objects.update_or_create(
                 stage=stage, title=sec_title, defaults=sec_defaults
             )
-            if sec_created: created += 1
-            else: updated += 1
+            if sec_created:
+                created += 1
+            else:
+                updated += 1
             section_cache[(stage.id, sec_title)] = section
             section = section_cache[(stage.id, sec_title)]
 
-            # 5️ SUB_SECTION
+            # 5️⃣ SUB_SECTION
+            if has_real_subsection:
+                sub_key = (section.id, sub_sec_title)
+                if sub_key not in subsection_cache:
+                    if section.id not in sub_counters:
+                        sub_counters[section.id] = 0
+                    sub_counters[section.id] += 1
+
+                    # 🔹 ВАЖНО: detail из Excel идёт именно в подраздел!
+                    sub_defaults = {
+                        'duration_hours': _to_float(row_dict.get('DURATION_HOURS')),
+                        'order': sub_counters[section.id],
+                        'detail': detail_val,  # ← ВОТ ЭТО ГЛАВНОЕ ИЗМЕНЕНИЕ
+                    }
+
+                    sub_sec, sub_created = SubSection.objects.update_or_create(
+                        section=section, title=sub_sec_title, defaults=sub_defaults
+                    )
+                    if sub_created:
+                        created += 1
+                    else:
+                        updated += 1
+                    subsection_cache[sub_key] = sub_sec
+
+            # 5️⃣ SUB_SECTION
             sub_sec_title = _clean(row_dict.get('SUB_SECTION'))
             if sub_sec_title:
                 sub_key = (section.id, sub_sec_title)
@@ -204,17 +251,28 @@ def import_courses_excel(file_obj):
                         sub_counters[section.id] = 0
                     sub_counters[section.id] += 1
 
+                    # 🔹 НОВОЕ: Обработка колонки DETAILS для подраздела
+                    sub_detail_raw = _clean(row_dict.get('DETAILS', '')).lower()
+                    sub_detail_val = DETAIL_MAP.get(sub_detail_raw, sub_detail_raw)
+
+                    # Если в Excel для подраздела detail не валиден или пуст, берем от родительского раздела
+                    if sub_detail_val not in VALID_DETAILS:
+                        sub_detail_val = section.detail or 'sdo'
+
                     sub_defaults = {
                         'duration_hours': _to_float(row_dict.get('DURATION_HOURS')),
-                        'order': sub_counters[section.id]
+                        'order': sub_counters[section.id],
+                        'detail': sub_detail_val,  # 🔹 ДОБАВЛЕНО: сохраняем detail в подраздел!
                     }
+
                     sub_sec, sub_created = SubSection.objects.update_or_create(
                         section=section, title=sub_sec_title, defaults=sub_defaults
                     )
-                    if sub_created: created += 1
-                    else: updated += 1
+                    if sub_created:
+                        created += 1
+                    else:
+                        updated += 1
                     subsection_cache[sub_key] = sub_sec
-
         except Exception as e:
             errors += 1
             err_msg = f"Строка {i}: {e}"

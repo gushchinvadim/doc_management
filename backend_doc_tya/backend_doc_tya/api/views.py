@@ -1310,7 +1310,6 @@ class GroupScheduleViewSet(viewsets.ReadOnlyModelViewSet):
 
         return Response(GroupScheduleSerializer(gs).data)
 
-
     @action(detail=False, methods=['post'], url_path='create-draft')
     def create_draft(self, request):
         """Создаёт черновик расписания для зачисления"""
@@ -1338,7 +1337,7 @@ class GroupScheduleViewSet(viewsets.ReadOnlyModelViewSet):
 
             if existing:
                 existing = GroupSchedule.objects.prefetch_related(
-                    'items__stage', 'items__section', 'items__instructor'
+                    'items__stage', 'items__section', 'items__subsection', 'items__instructor'
                 ).get(id=existing.id)
                 return Response(
                     GroupScheduleSerializer(existing).data,
@@ -1346,26 +1345,25 @@ class GroupScheduleViewSet(viewsets.ReadOnlyModelViewSet):
                 )
 
             # Проверяем stages
-            stages = enrollment.module.stages.prefetch_related('sections').all().order_by('order')
+            stages = enrollment.module.stages.prefetch_related('sections__subsections').all().order_by('order')
             if not stages.exists():
                 return Response(
                     {'error': 'У модуля нет этапов (stages).'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # 🔹 Формируем значение для group_code из данных зачисления
             safe_group_code = str(enrollment.group) if enrollment.group else f"Группа_{enrollment.id}"
 
             # Создаём черновик
             with transaction.atomic():
                 gs = GroupSchedule.objects.create(
                     enrollment=enrollment,
-                    group_code=safe_group_code,  # 🔹 ТЕПЕРЬ ЭТО РАБОТАЕТ
+                    group_code=safe_group_code,
                     status=ScheduleStatus.DRAFT,
                     version=1
                 )
 
-                # 🔹 Копируем структуру модуля с ПОСЛЕДОВАТЕЛЬНОЙ нумерацией (начиная с 1)
+                #  Копируем структуру модуля с учетом subsections
                 items = []
                 item_order = 1
 
@@ -1375,13 +1373,31 @@ class GroupScheduleViewSet(viewsets.ReadOnlyModelViewSet):
                         continue
 
                     for section in sections:
-                        items.append(ScheduleItem(
-                            group_schedule=gs,
-                            stage=stage,
-                            section=section,
-                            order=item_order  # 🔹 Последовательный номер: 1, 2, 3...
-                        ))
-                        item_order += 1
+                        # 🔹 Проверяем, есть ли у раздела подподразделы
+                        subsections = section.subsections.all().order_by('order') if hasattr(section,
+                                                                                             'subsections') else []
+
+                        if subsections.exists():
+                            #  Если есть subsections — создаем item для каждого
+                            for subsection in subsections:
+                                items.append(ScheduleItem(
+                                    group_schedule=gs,
+                                    stage=stage,
+                                    section=section,
+                                    subsection=subsection,  # 🔹 Указываем subsection
+                                    order=item_order
+                                ))
+                                item_order += 1
+                        else:
+                            # 🔹 Если нет subsections — создаем item для самого section
+                            items.append(ScheduleItem(
+                                group_schedule=gs,
+                                stage=stage,
+                                section=section,
+                                subsection=None,  # 🔹 subsection пустой
+                                order=item_order
+                            ))
+                            item_order += 1
 
                 if not items:
                     gs.delete()
@@ -1392,9 +1408,9 @@ class GroupScheduleViewSet(viewsets.ReadOnlyModelViewSet):
 
                 ScheduleItem.objects.bulk_create(items, batch_size=500)
 
-            # Перезагружаем с связями для отдачи
+            # Перезагружаем с связями
             gs = GroupSchedule.objects.prefetch_related(
-                'items__stage', 'items__section', 'items__instructor'
+                'items__stage', 'items__section', 'items__subsection', 'items__instructor'
             ).get(id=gs.id)
 
             return Response(
@@ -1411,6 +1427,7 @@ class GroupScheduleViewSet(viewsets.ReadOnlyModelViewSet):
                 {'error': f'Внутренняя ошибка: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
     @action(detail=True, methods=['post'], url_path='update-items')
     def update_items(self, request, pk=None):
         """Массовое обновление элементов расписания"""
@@ -1527,8 +1544,6 @@ class GroupScheduleViewSet(viewsets.ReadOnlyModelViewSet):
             print(traceback.format_exc())
             return Response({'error': str(e)}, status=500)
 
-
-
     @action(detail=False, methods=['post'], url_path='export-excel')
     def export_excel(self, request):
         """Экспорт расписания в Excel"""
@@ -1541,29 +1556,17 @@ class GroupScheduleViewSet(viewsets.ReadOnlyModelViewSet):
         except Enrollment.DoesNotExist:
             return HttpResponse('❌ Enrollment not found', status=404)
 
-        # 🔹 1. Находим или создаём черновик расписания
         gs, created = GroupSchedule.objects.get_or_create(
             enrollment=enrollment,
             defaults={'status': 'draft', 'version': 1}
         )
 
-        # 🔹 2. Если элементов нет — генерируем скелет из модуля
         if gs.items.count() == 0:
-            items_to_create = []
-            for stage in enrollment.module.stages.prefetch_related('sections').all().order_by('order'):
-                for section in stage.sections.all().order_by('order'):
-                    items_to_create.append(ScheduleItem(
-                        group_schedule=gs,
-                        stage=stage,
-                        section=section,
-                        order=section.order
-                    ))
-            ScheduleItem.objects.bulk_create(items_to_create, batch_size=500)
+            return HttpResponse('❌ Расписание пустое', status=400)
 
-        # 🔹 3. Загружаем элементы с данными
         items = ScheduleItem.objects.select_related(
-            'section', 'stage', 'instructor', 'group_schedule__enrollment'
-        ).filter(group_schedule=gs).order_by('stage__order', 'section__order')
+            'section', 'subsection', 'stage', 'instructor', 'group_schedule__enrollment__module__course'
+        ).filter(group_schedule=gs).order_by('stage__order', 'section__order', 'subsection__order')
 
         module = enrollment.module
         wb = openpyxl.Workbook()
@@ -1571,110 +1574,134 @@ class GroupScheduleViewSet(viewsets.ReadOnlyModelViewSet):
         ws.title = "Расписание"
 
         # Стили
-        thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'),
-                             bottom=Side(style='thin'))
+        thin_border = Border(left=Side(style='thin'), right=Side(style='thin'),
+                             top=Side(style='thin'), bottom=Side(style='thin'))
         align_center = Alignment(horizontal='center', vertical='center', wrap_text=True)
         align_left = Alignment(horizontal='left', vertical='top', wrap_text=True)
-        bold_font = Font(bold=True)
+        bold_font = Font(bold=True, size=11, name='Times New Roman')
+        normal_font = Font(size=11, name='Times New Roman')
+        header_font = Font(bold=True, size=10, name='Times New Roman')
         stage_fill = PatternFill(start_color="E2EFDA", end_color="E2EFDA", fill_type="solid")
+        header_fill = PatternFill(start_color="D9E1F2", end_color="D9E1F2", fill_type="solid")
 
-        # 🔹 Шапка (данные берём из GroupSchedule)
+        # ШАПКА (строки 1-5)
         ws.merge_cells('C1:E1')
-        ws[
-            'C1'] = f"Программа подготовки специалистов согласно перечню специалистов авиационного персонала гражданской авиации «Периодическая наземная подготовка членов летных экипажей»"
-        ws['C1'].alignment = align_left
-        ws['C1'].font = Font(bold=True, size=11)
+        c = ws.cell(row=1, column=3, value=module.course.title if module and module.course else "")
+        c.alignment = align_left;
+        c.font = bold_font
 
         ws.merge_cells('C2:E2')
-        ws[
-            'C2'] = f"Модуль 3. Ежегодная аварийно-спасательная подготовка и подготовка по управлению ресурсами экипажа ВС Boeing -737-800 (Next Generation - NG)" if module else ""
-        ws['C2'].alignment = align_left
-        ws['C2'].font = Font(bold=True, size=11)
+        c = ws.cell(row=2, column=3, value=module.title if module else "")
+        c.alignment = align_left;
+        c.font = bold_font
 
         ws.merge_cells('C3:E3')
-        ws['C3'] = f"Группа: {enrollment.group}"
-        ws['C3'].alignment = align_left
-        ws['C3'].font = Font(bold=True, size=11)
+        c = ws.cell(row=3, column=3, value=f"Группа: {enrollment.group}")
+        c.alignment = align_left;
+        c.font = bold_font
 
         ws.merge_cells('C4:E4')
-        ws['C4'] = f"Дата начала: {gs.start_date.strftime('%d.%m.%Y') if gs.start_date else ''}"
-        ws['C4'].alignment = align_left
+        c = ws.cell(row=4, column=3,
+                    value=f"Дата начала: {gs.start_date.strftime('%d.%m.%Y') if gs.start_date else ''}")
+        c.alignment = align_left;
+        c.font = normal_font
 
-        ws['A5'] = "Куратор"
-        ws['A5'].font = bold_font
+        # Куратор и Утверждающий (строка 5)
+        ws.cell(row=5, column=1, value="Куратор").font = bold_font
         ws.merge_cells('B5:E5')
-        ws['B5'] = gs.curator.name if gs.curator and hasattr(gs.curator, 'name') else ""
-        ws['G4'] = "УТВЕРЖДАЮ:"
-        ws['H4'].font = bold_font
-        ws.merge_cells('G5:H5')
-        ws['G5'] = "Директор(Заместитель директора)"
-        ws['G5'].font = bold_font
-        ws.merge_cells('G6:H6')
-        ws['G6'] = gs.director.name if gs.director and hasattr(gs.director, 'name') else ""
+        ws.cell(row=5, column=2,
+                value=gs.curator.name if gs.curator and hasattr(gs.curator, 'name') else "").font = normal_font
 
-        # 🔹 Заголовки таблицы
-        ws.append([''] * 8)
-        headers = ['№', 'Дата', 'Раздел', 'Подраздел/Сессия', 'Продолжительность', 'Почасовое расписание',
-                   'Преподаватель',
-                   'Место проведения']
-        ws.append(headers)
-        for cell in ws[ws.max_row]:
-            cell.font = bold_font
+        ws.cell(row=5, column=6, value="УТВЕРЖДАЮ:").font = bold_font
+        ws.merge_cells('G5:H5')
+        ws.cell(row=5, column=7,
+                value=gs.director.name if gs.director and hasattr(gs.director, 'name') else "").font = normal_font
+
+        # ЗАГОЛОВКИ ТАБЛИЦЫ (строка 7) - ДОБАВЛЕНА колонка "Время начала"
+        header_row = 7
+        headers = ['№', 'Дата', 'Время начала', 'Раздел', 'Подраздел/Сессия', 'Продолжительность',
+                   'Почасовое расписание', 'Преподаватель', 'Место проведения']
+
+        for col_idx, header in enumerate(headers, 1):
+            cell = ws.cell(row=header_row, column=col_idx, value=header)
+            cell.font = header_font
             cell.alignment = align_center
             cell.border = thin_border
+            cell.fill = header_fill
 
-        row_num = 1
+        # ДАННЫЕ (начинаем со строки 8)
+        current_row = header_row + 1
         current_stage_id = None
 
         for item in items:
-            # 🔹 Заголовок этапа (выводим только при смене) - БЕЗ stage и скобок
+            # Заголовок этапа
             if item.stage.id != current_stage_id:
-                ws.append([''] * 8)
-                r = ws.max_row
-                ws.merge_cells(f'A{r}:H{r}')
-                # 🔹 Убираем скобки и "stage"
-                stage_title = item.stage.title.replace('(', '').replace(')', '').replace('stage', '').strip()
-                ws[f'A{r}'] = f"{stage_title}"
-                ws[f'A{r}'].font = bold_font
-                ws[f'A{r}'].fill = stage_fill
+                # Объединяем все 9 колонок
+                ws.merge_cells(f'A{current_row}:I{current_row}')
+                stage_title = item.stage.title
+                stage_title = stage_title.replace(' stage', '').replace('stage', '').strip()
+                if stage_title.startswith('(') and stage_title.endswith(')'):
+                    stage_title = stage_title[1:-1].strip()
+
+                cell = ws.cell(row=current_row, column=1, value=stage_title)
+                cell.font = bold_font
+                cell.fill = stage_fill
+                cell.border = thin_border
+                for c in range(2, 10):
+                    ws.cell(row=current_row, column=c).border = thin_border
+                current_row += 1
                 current_stage_id = item.stage.id
 
-            # 🔹 Генерация времени на лету
+            # Расчёт времени
             start = item.start_time or "09:00"
             times = get_schedule_times(item.effective_detail, start_time=start)
 
-            # 🔹 Подраздел (если есть связь)
-            sub_title = ""
-            if hasattr(item.section, 'subsection') and item.section.subsection:
-                sub_title = item.section.subsection.title
-            elif hasattr(item.section, 'subsections') and item.section.subsections.exists():
-                sub_title = ", ".join([s.title for s in item.section.subsections.all()[:2]])
+            # Подраздел
+            sub_title = item.subsection.title if item.subsection else ""
 
-            ws.append([
-                row_num,
-                item.date.strftime('%d.%m.%Y') if item.date else '',
-                item.section.title,
-                sub_title,
-                float(item.section.duration_hours) if item.section.duration_hours else 0,
-                times,
-                item.instructor.name if item.instructor and hasattr(item.instructor, 'name') else '',
-                item.get_location_display() if item.location else ''
-            ])
+            # Продолжительность
+            duration = 0
+            if item.subsection and item.subsection.duration_hours:
+                duration = float(item.subsection.duration_hours)
+            elif item.section.duration_hours:
+                duration = float(item.section.duration_hours)
 
-            r = ws.max_row
-            for col_idx, cell in enumerate(ws[r], 1):
-                cell.border = thin_border
-                cell.alignment = align_left if col_idx in [3, 4, 6] else align_center
-            row_num += 1
+            # Инструктор
+            instructor_name = ''
+            if item.instructor:
+                instructor_name = item.instructor.name if hasattr(item.instructor, 'name') else str(item.instructor)
 
-        # Ширины колонок
-        for col, width in zip('ABCDEFGH', [5, 12, 30, 25, 10, 45, 25, 25]):
+            # Место
+            location = item.get_location_display() if item.location else ''
+
+            # Запись строки - ТЕПЕРЬ 9 КОЛОНОК
+            ws.cell(row=current_row, column=1, value=item.order).alignment = align_center
+            ws.cell(row=current_row, column=2,
+                    value=item.date.strftime('%d.%m.%Y') if item.date else '').alignment = align_center
+            ws.cell(row=current_row, column=3, value=start).alignment = align_center  # НОВАЯ КОЛОНКА: Время начала
+            ws.cell(row=current_row, column=4, value=item.section.title).alignment = align_left
+            ws.cell(row=current_row, column=5, value=sub_title).alignment = align_left
+            ws.cell(row=current_row, column=6, value=duration).alignment = align_center
+            ws.cell(row=current_row, column=7, value=times).alignment = align_left
+            ws.cell(row=current_row, column=8, value=instructor_name).alignment = align_left
+            ws.cell(row=current_row, column=9, value=location).alignment = align_left
+
+            # Границы
+            for col_idx in range(1, 10):
+                ws.cell(row=current_row, column=col_idx).border = thin_border
+
+            current_row += 1
+
+        # Ширины колонок (9 колонок)
+        column_widths = {'A': 5, 'B': 12, 'C': 12, 'D': 35, 'E': 30, 'F': 12, 'G': 45, 'H': 25, 'I': 25}
+        for col, width in column_widths.items():
             ws.column_dimensions[col].width = width
 
         response = HttpResponse(
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
-        response['Content-Disposition'] = f'attachment; filename="schedule_{module.code}_{enrollment.group}.xlsx"'
+        response[
+            'Content-Disposition'] = f'attachment; filename="schedule_{module.code if module else ""}_{enrollment.group}.xlsx"'
         wb.save(response)
         return response
 # =============================================================================

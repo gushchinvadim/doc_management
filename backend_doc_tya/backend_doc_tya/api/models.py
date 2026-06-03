@@ -210,6 +210,12 @@ class SubSection(models.Model):
         verbose_name="Родительский раздел"
     )
     title = models.CharField(null=True, blank=True, max_length=500, verbose_name="Название подраздела/сессии")
+    detail = models.CharField(
+        max_length=20,  # Используйте тот же max_length, что и в модели Section
+        blank=True,
+        null=True,
+        verbose_name="Тип детализации (detail)"
+    )
     duration_hours = models.DecimalField(max_digits=6, decimal_places=2, default=0, verbose_name="Часы")
     order = models.PositiveIntegerField(default=0, verbose_name="Порядковый номер")
 
@@ -369,6 +375,16 @@ class ScheduleItem(models.Model):
     stage = models.ForeignKey("Stage", on_delete=models.PROTECT, related_name="schedule_items")
     section = models.ForeignKey("Section", on_delete=models.PROTECT, related_name="schedule_items")
 
+    # 🔹 НОВОЕ ПОЛЕ: подподраздел (если есть)
+    subsection = models.ForeignKey(
+        "Subsection",
+        on_delete=models.PROTECT,
+        related_name="schedule_items",
+        null=True,
+        blank=True,
+        verbose_name="Подподраздел"
+    )
+
     # 🔹 Ручные параметры
     date = models.DateField(null=True, blank=True, verbose_name="Дата")
     start_time = models.CharField(
@@ -386,7 +402,7 @@ class ScheduleItem(models.Model):
     order = models.IntegerField(default=0, verbose_name="Порядок")
     is_locked = models.BooleanField(default=False, verbose_name="Зафиксировано")
 
-    #  Переопределение типа (если нужно отойти от стандарта модуля)
+    # Переопределение типа (если нужно отойти от стандарта модуля)
     override_detail = models.CharField(
         max_length=10, choices=getattr(Section, 'DETAIL_CHOICES', []),
         null=True, blank=True, verbose_name="Переопределить тип"
@@ -394,22 +410,34 @@ class ScheduleItem(models.Model):
 
     class Meta:
         db_table = "schedule_item"
-        ordering = ["group_schedule", "stage__order", "section__order"]
+        ordering = ["group_schedule", "stage__order", "section__order", "subsection__order"]
         verbose_name = "Элемент расписания"
         verbose_name_plural = "Элементы расписания"
 
     def __str__(self):
-        return f"{self.section.title} ({self.date or '—'})"
-
-    def clean(self):
-        from django.core.exceptions import ValidationError
-        import re
-        if self.start_time and not re.match(r'^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$', self.start_time):
-            raise ValidationError({'start_time': 'Неверный формат. Используйте ЧЧ:ММ (например, 11:00)'})
+        sub = f" / {self.subsection.title}" if self.subsection else ""
+        return f"{self.section.title}{sub} ({self.date or '—'})"
 
     @property
     def effective_detail(self):
-        return self.override_detail or self.section.detail
+        """
+        Возвращает тип детализации для расчета времени.
+        Приоритет: override_detail → subsection.detail → section.detail
+        """
+        if self.override_detail:
+            return self.override_detail
+
+        # Если есть подраздел — пробуем взять его detail
+        if self.subsection_id:
+            sub_detail = getattr(self.subsection, 'detail', None)
+            if sub_detail:
+                return sub_detail
+
+        # Fallback: берём из раздела
+        if hasattr(self.section, 'detail') and self.section.detail:
+            return self.section.detail
+
+        return ''
 
 # =============================================================================
 # 8. РЕЗУЛЬТАТЫ РАЗДЕЛОВ (вместо ModuleProgress)

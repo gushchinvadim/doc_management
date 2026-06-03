@@ -521,10 +521,14 @@ class FinalizeScheduleInputSerializer(serializers.Serializer):
 
 
 class ScheduleItemSerializer(serializers.ModelSerializer):
-    """Сериализатор для элемента расписания"""
     stage_title = serializers.CharField(source='stage.title', read_only=True)
     section_title = serializers.CharField(source='section.title', read_only=True)
     section_detail = serializers.CharField(source='section.detail', read_only=True)
+
+    # 🔹 НОВЫЕ ПОЛЯ для subsection
+    subsection_title = serializers.SerializerMethodField()
+    subsection_detail = serializers.SerializerMethodField()
+
     instructor_name = serializers.SerializerMethodField()
     location_display = serializers.CharField(source='get_location_display', read_only=True)
     effective_detail = serializers.CharField(read_only=True)
@@ -536,26 +540,36 @@ class ScheduleItemSerializer(serializers.ModelSerializer):
             'id', 'order', 'date', 'start_time', 'is_locked',
             'stage', 'stage_title',
             'section', 'section_title', 'section_detail',
+            'subsection', 'subsection_title', 'subsection_detail',  # 🔹 ДОБАВЛЕНО
             'instructor', 'instructor_name',
             'location', 'location_display',
             'override_detail', 'effective_detail', 'time_string'
         ]
         read_only_fields = [
-            'id', 'stage', 'section', 'stage_title', 'section_title',
-            'section_detail', 'instructor_name', 'location_display',
+            'id', 'stage', 'section', 'subsection',  # 🔹 ДОБАВЛЕНО
+            'stage_title', 'section_title', 'section_detail',
+            'subsection_title', 'subsection_detail',  # 🔹 ДОБАВЛЕНО
+            'instructor_name', 'location_display',
             'effective_detail', 'time_string'
         ]
 
+    def get_subsection_title(self, obj):
+        """Возвращает название subsection или None"""
+        if obj.subsection:
+            return obj.subsection.title
+        return None
+
+    def get_subsection_detail(self, obj):
+        """Возвращает тип subsection или None"""
+        if obj.subsection and hasattr(obj.subsection, 'detail'):
+            return obj.subsection.detail
+        return None
+
     def get_instructor_name(self, obj):
-        """Получаем имя инструктора"""
         if not obj.instructor:
             return None
-
-        # Используем поле name из модели Staff
         if hasattr(obj.instructor, 'name') and obj.instructor.name:
             return obj.instructor.name
-
-        # Если есть связь с user
         if hasattr(obj.instructor, 'user') and obj.instructor.user:
             user = obj.instructor.user
             parts = []
@@ -564,13 +578,11 @@ class ScheduleItemSerializer(serializers.ModelSerializer):
             if user.last_name:
                 parts.append(user.last_name)
             return ' '.join(parts) if parts else user.username
-
         return f"Сотрудник #{obj.instructor.id}"
 
     def get_time_string(self, obj):
         start = obj.start_time or "09:00"
         return get_schedule_times(obj.effective_detail, start_time=start)
-
 
 class GroupScheduleSerializer(serializers.ModelSerializer):
     items = ScheduleItemSerializer(many=True, read_only=True)
