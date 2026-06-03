@@ -2,10 +2,20 @@
 
 Система управления документами и расписанием для учебного центра.
 
-## Структура проекта
+## Структура проекта/Технологии
 
-- `backend_doc_tya/` — Django backend (DRF)
-- `frontend/` — React + Vite frontend
+- `backend_doc_tya/` — Django 5.x, Django REST Framework
+- `frontend_doc_tya/` — React + Vite frontend
+- `database/` - SQLite /PostgreSQL
+
+## Функциональность
+
+- 📅 Генерация и редактирование расписания учебных групп
+- 👥 Управление слушателями, группами и зачислениями
+- 📥 Экспорт расписания в Excel
+- 🏆 Выпуск сертификатов
+- 📑 Отчёты для ФИС ФРДО и РАУЦ
+
 
 ## Установка
 
@@ -18,13 +28,13 @@ pip install -r requirements.txt
 python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver
-# doc_management
-# doc_management
-# doc_management
-# doc_management
-# doc_management
-# doc_management
-
+---
+```
+### Frontend
+```bash
+cd frontend_doc_tya
+yarn install
+yarn dev
 ---
 ```
 
