@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { getToken } from '../api/auth';
-import { exportSchedule } from '../api/schedule'; // 🔹 Новый API-слой
+// import { exportSchedule } from '../api/schedule'; 
 import Header from '../components/Layout/Header';
 import Footer from '../components/Layout/Footer';
 import EnrollmentForm from '../components/EnrollmentForm/EnrollmentForm';
@@ -12,8 +12,6 @@ import EnrollmentSelector from '../components/Journal/EnrollmentSelector';
 import AddStudent from '../components/AddStudent/AddStudent';
 import Certificate from '../components/Certificate/Certificate';
 import GroupFolder from '../components/GroupFolder/GroupFolder';
-// 🔹 Заменяем старый компонент на новый редактор
-// import ScheduleExportButton from '../components/Schedule/ScheduleExportButton';
 import './HomePage.css';
 import { getEnrollmentsByModule } from '../api/enrollment';
 import GenerateSchedule from '../components/Schedule/GenerateSchedule';
